@@ -55,9 +55,9 @@ MOUSE_EVENT = 0x0002
 WINDOW_BUFFER_SIZE_EVENT = 0x0004
 FOCUS_EVENT = 0x0010
 MENU_EVENT = 0x0008
-VK_SHIFT = 0x10
-VK_CONTROL = 0x11
-VK_MENU = 0x12
+VK_SHIFT = 0x10         # These are already defined in winconstants.py
+VK_CONTROL = 0x11       # ''
+VK_MENU = 0x12          # ''
 GENERIC_READ = int(0x80000000)
 GENERIC_WRITE = 0x40000000
 
@@ -675,7 +675,7 @@ Console.WriteFile.argtypes = [HANDLE, LPCVOID, DWORD, LPDWORD, c_void_p] #HANDLE
 
 from .event import Event
 
-VkKeyScan = windll.user32.VkKeyScanA
+
 
 
 class event(Event):
@@ -826,6 +826,7 @@ def install_readline(hook):
 
 if __name__ == '__main__':
     import time, sys
+    VkKeyScan = windll.user32.VkKeyScanA
 
 
     def p(char):

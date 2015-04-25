@@ -2,6 +2,8 @@
 #But included here to avoid the dependency
 from __future__ import print_function, unicode_literals, absolute_import
 
+class BitEnum(object): pass
+
 VK_LBUTTON=1
 VK_RBUTTON=2
 VK_CANCEL=3
@@ -170,3 +172,20 @@ CF_GDIOBJLAST=1023
 
 GPTR=64
 GHND=66
+
+# dwControlKeyState enumeration
+# https://msdn.microsoft.com/en-us/library/windows/desktop/ms684166(v=vs.85).aspx
+CKS = BitEnum()
+# Bit Flags
+CKS.ALT_R       = 0x0001
+CKS.ALT_L       = 0x0002
+CKS.CTRL_R      = 0x0004
+CKS.CTRL_L      = 0x0008
+CKS.SHIFT       = 0x0010
+CKS.NUMLOCK     = 0x0020
+CKS.SCROLLLOCK  = 0x0040
+CKS.CAPSLOCK    = 0x0080
+CKS.ENHANCED    = 0x0100
+# Meta Flags
+CKS.ALT         = CKS.ALT_R  | CKS.ALT_L
+CKS.CTRL        = CKS.CTRL_R | CKS.CTRL_L

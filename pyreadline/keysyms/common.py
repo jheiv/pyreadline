@@ -17,6 +17,7 @@ except NameError:
 from ctypes import windll
 
 from .keysyms import code2sym_map
+from .winconstants import CKS
 from ..unicode_helper import ensure_unicode
 
 validkey =set(['cancel',      'backspace',    'tab',          'clear',
@@ -206,9 +207,10 @@ class KeyPress(object):
 
     @classmethod
     def from_char_state_code(cls, char, state, keycode):
-        control = (state & (4+8)) != 0
-        meta    = (state & (1+2)) != 0
-        shift   = (state & 0x10)  != 0
+        meta    = bool(state & CKS.ALT)     # 0x01 | 0x02
+        control = bool(state & CKS.CTRL)    # 0x04 | 0x08
+        shift   = bool(state & CKS.SHIFT)   # 0x10
+
         if control and not meta:  # Matches ctrl- chords should pass keycode as char
             char = chr(keycode)
         elif control and meta:    # Matches alt gr and should just pass on char
