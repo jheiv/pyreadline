@@ -5,3 +5,8 @@ __pycache__/
 *.bak
 MANIFEST
 *.*~
+*.pyc
+*.pyo
+/.settings
+/.project
+/.pydevproject

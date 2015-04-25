@@ -63,7 +63,7 @@ class IncrementalSearchPromptMode(object):
             self.subsearch_fun = self._history.forward_search_history
             self.subsearch_prompt = "forward-i-search%d`%s': "
             self.line = self.subsearch_fun(self.subsearch_query)
-        elif keyinfo.control == False and keyinfo.meta == False:
+        elif keyinfo.state.control == False and keyinfo.state.meta == False:
             self.subsearch_query += keyinfo.char
             self.line = self.subsearch_fun(self.subsearch_query)
         else:
@@ -130,7 +130,7 @@ class SearchPromptMode(object):
             return False
         elif keyinfo.keyname:
             pass
-        elif keyinfo.control == False and keyinfo.meta == False:
+        elif keyinfo.state.control == False and keyinfo.state.meta == False:
             self.non_inc_query += keyinfo.char
         else:
             pass
@@ -178,8 +178,8 @@ class DigitArgumentMode(object):
         elif keyinfo.keyname:
             pass
         elif (keyinfo.char in "0123456789" and
-              keyinfo.control == False and
-              keyinfo.meta == False):
+              keyinfo.state.control == False and
+              keyinfo.state.meta == False):
             log("arg %s %s"%(self.argument, keyinfo.char))
             self.argument = self.argument * 10 + int(keyinfo.char)
         else:
@@ -251,7 +251,7 @@ class EmacsMode(DigitArgumentMode, IncrementalSearchPromptMode,
             pass
         if self.next_meta:
             self.next_meta = False
-            keyinfo.meta = True
+            keyinfo.state.meta = True
         keytuple = keyinfo.to_tuple()
 
         if self._insert_verbatim:
@@ -265,7 +265,7 @@ class EmacsMode(DigitArgumentMode, IncrementalSearchPromptMode,
             log("exit_dispatch:<%s, %s>"%pars)
             if lineobj.EndOfLine(self.l_buffer) == 0:
                 raise EOFError
-        if keyinfo.keyname or keyinfo.control or keyinfo.meta:
+        if keyinfo.keyname or keyinfo.state.control or keyinfo.state.meta:
             default = nop
         else:
             default = self.self_insert

@@ -573,7 +573,7 @@ class Readline(BaseReadline):
         log("KBDIRQ")
         event = Event(0,0)
         event.char = "c"
-        event.keyinfo = KeyPress("c", shift=False, control=True,
+        event.keyinfo = KeyPress(char="c", shift=False, control=True,
                                  meta=False, keyname=None)
         if self.allow_ctrl_c:
             now = time.time()

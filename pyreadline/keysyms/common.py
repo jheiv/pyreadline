@@ -97,17 +97,6 @@ class ShiftState(object):
         return {'shift': self.shift, 'control': self.control, 'meta': self.meta }
 
 
-    def __getattribute__(self, key):
-        if key not in type(self).__dict__ and key not in ['shift', 'control', 'meta', '_state']:
-            raise RuntimeError("Tried to get invalid attribute on ShiftState object: %s" % key)
-        return object.__getattribute__(self, key)
-
-    def __setattr__(self, key, val):
-        if key not in type(self).__dict__ and key not in ['shift', 'control', 'meta', '_state']:
-            raise RuntimeError("Tried to set invalid attribute on ShiftState object: %s" % key)
-        return object.__setattr__(self, key, val)
-
-
 class KeyPress(object):
     # Properties
     char    = _prop('_info', 'char')
@@ -131,9 +120,16 @@ class KeyPress(object):
         # shift, control, and meta build a ShiftState object which is put into _info
         self.state   = ShiftState(shift=shift, control=control, meta=meta)
 
+        # Call finish now, and in all the static factory classmethods, in case we modify attributes
+        #   after we create the KeyPress object.
+        self.finish()
+
+
+    def finish(self):
         # Check if we need to force char to upper case, and do so if necessary
         if self.force_upper_char():
             self.char = self.char.upper()
+        return self
 
 
     @classmethod
@@ -161,7 +157,7 @@ class KeyPress(object):
         # Update KeyPress object (self)'s char attribute
         self.char = chr(lb)
         # Return created object
-        return self
+        return self.finish()
 
 
     @classmethod
@@ -205,7 +201,7 @@ class KeyPress(object):
                         raise IndexError("Not a valid key: '%s'"%keydescr)
                 else:
                     self.char = keydescr
-                return self
+                return self.finish()
 
 
     @classmethod
@@ -222,19 +218,8 @@ class KeyPress(object):
             keyname=code2sym_map[keycode]
         except KeyError:
             keyname = ""
-        out = cls(char=char, shift=shift, control=control, meta=meta, keyname=keyname)
-        return out
-
-
-    def __getattribute__(self, key):
-        if key not in type(self).__dict__ and key not in ['char', 'state', 'keyname', '_info']:
-            raise RuntimeError("Tried to get invalid attribute on KeyPress object: %s" % key)
-        return object.__getattribute__(self, key)
-
-    def __setattr__(self, key, val):
-        if key not in ['char', 'state', 'keyname', '_info']:
-            raise RuntimeError("Tried to set invalid attribute on KeyPress object: %s" % key)
-        return object.__setattr__(self, key, val)
+        self = cls(char=char, shift=shift, control=control, meta=meta, keyname=keyname)
+        return self.finish()
 
 
     def __repr__(self):

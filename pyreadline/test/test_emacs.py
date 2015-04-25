@@ -57,8 +57,6 @@ class EmacsModeTest (EmacsMode):
             lst_key = [keytext]
         for key in lst_key:
             keyinfo, event = keytext_to_keyinfo_and_event(key)
-            print(keyinfo)
-            print(keyinfo.to_tuple())
             dispatch_func = self.key_dispatch.get(keyinfo.to_tuple(), self.self_insert)
             self.tested_commands[dispatch_func.__name__]=dispatch_func
             log("keydisp: %s %s"%( key,dispatch_func.__name__))
