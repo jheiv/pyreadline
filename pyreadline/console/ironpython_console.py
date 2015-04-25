@@ -14,7 +14,7 @@ from __future__ import print_function, unicode_literals, absolute_import
 #
 # Ironpython requires a patch to work do:
 #
-# In file PythonCommandLine.cs patch line:     
+# In file PythonCommandLine.cs patch line:
 #    class PythonCommandLine
 #    {
 
@@ -26,21 +26,21 @@ from __future__ import print_function, unicode_literals, absolute_import
 #
 # primitive debug printing that won't interfere with the screen
 
-import clr,sys
-clr.AddReferenceToFileAndPath(sys.executable)
-import IronPythonConsole
+c_int = byref = None      # This must be *before* IronPython imports, so they're clobbered.
 
 import sys
 import re
 import os
 
-import System
+import clr                # @UnresolvedImport
+clr.AddReferenceToFileAndPath(sys.executable)
+import IronPythonConsole  # @UnresolvedImport
+import System             # @UnresolvedImport
 
 from .event import Event
 from pyreadline.logger import log
 
-from pyreadline.keysyms import \
-    make_keysym, make_keyinfo, make_KeyPress, make_KeyPress_from_keydescr
+from pyreadline.keysyms import KeyPress, make_keysym, make_keyinfo, make_KeyPress, KeyPress
 from pyreadline.console.ansi import AnsiState
 color = System.ConsoleColor
 
@@ -188,8 +188,8 @@ class Console(object):
         return scroll
 
     trtable = {0 : color.Black,      4 : color.DarkRed,  2 : color.DarkGreen,
-               6 : color.DarkYellow, 1 : color.DarkBlue, 5 : color.DarkMagenta,  
-               3 : color.DarkCyan,   7 : color.Gray,     8 : color.DarkGray,   
+               6 : color.DarkYellow, 1 : color.DarkBlue, 5 : color.DarkMagenta,
+               3 : color.DarkCyan,   7 : color.Gray,     8 : color.DarkGray,
                4+8 : color.Red,      2+8 : color.Green,  6+8 : color.Yellow,
                1+8 : color.Blue,     5+8 : color.Magenta,3+8 : color.Cyan,
                7+8 : color.White}
@@ -211,7 +211,7 @@ class Console(object):
             bg = self.trtable[(0x00f0&attr)>>4]
         except TypeError:
             fg = attr
-            
+
         for chunk in chunks:
             m = self.escape_parts.match(chunk)
             if m:
@@ -232,7 +232,7 @@ class Console(object):
         self.SetConsoleTextAttribute(self.hout, attr)
         self.WriteConsoleA(self.hout, text, len(text), byref(n), None)
         return len(text)
-        
+
     if "EMACS" in os.environ:
         def write_color(self, text, attr=None):
             junk = c_int(0)
@@ -271,7 +271,7 @@ class Console(object):
         self.write_color(length * " ")
         self.pos(*pos)
         self.WindowTop = oldtop
-        
+
     def rectangle(self, rect, attr=None, fill=' '):
         '''Fill Rectangle.'''
         oldtop = self.WindowTop
@@ -336,7 +336,7 @@ class Console(object):
             sc.WindowWidth, sc.WindowHeight = width,height
         else:
             return sc.WindowWidth - 1, sc.WindowHeight - 1
-    
+
     def cursor(self, visible=True, size=None):
         '''Set cursor on or off.'''
         System.Console.CursorVisible = visible
@@ -376,7 +376,7 @@ def make_event_from_keydescr(keydescr):
     input.next_serial = input
     e = event(input,input)
     del input.next_serial
-    keyinfo = make_KeyPress_from_keydescr(keydescr)
+    keyinfo = KeyPress.from_keydescr(keydescr)
     e.keyinfo = keyinfo
     return e
 
@@ -395,11 +395,11 @@ def install_readline(hook):
         else:
             return res
     class IronPythonWrapper(IronPythonConsole.IConsole):
-        def ReadLine(self, autoIndentSize): 
+        def ReadLine(self, autoIndentSize):
             return hook_wrap()
         def Write(self, text, style):
             System.Console.Write(text)
-        def WriteLine(self, text, style): 
+        def WriteLine(self, text, style):
             System.Console.WriteLine(text)
     IronPythonConsole.PythonCommandLine.MyConsole = IronPythonWrapper()
 

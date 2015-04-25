@@ -8,12 +8,20 @@
 #  the file COPYING, distributed as part of this software.
 #*****************************************************************************
 from __future__ import print_function, unicode_literals, absolute_import
+
 import os
-import pyreadline.logger as logger
+
 from   pyreadline.logger import log
 import pyreadline.lineeditor.lineobj as lineobj
-import pyreadline.lineeditor.history as history
 from . import basemode
+
+__all__ = ['ViMode','ViCommand','ViExternalEditor','ViEvent','vi_list',
+           'vi_is_word', 'vi_is_space', 'vi_is_word_or_space',
+           'vi_pos_word_short', 'vi_pos_word_long', 'vi_pos_end_short', 'vi_pos_end_long',
+           'vi_pos_back_short', 'vi_pos_back_long',
+           'vi_pos_find_char_forward', 'vi_pos_find_char_backward',
+           'vi_pos_to_char_forward', 'vi_pos_to_char_backward',
+           'vi_pos_matching']
 
 class ViMode(basemode.BaseMode):
     mode="vi"
@@ -27,7 +35,7 @@ class ViMode(basemode.BaseMode):
     def process_keyevent(self, keyinfo):
         def nop(e):
             pass
-        keytuple=keyinfo.tuple()
+        keytuple=keyinfo.to_tuple()
 
         #Process exit keys. Only exit on empty line
         if keytuple in self.exit_dispatch:
@@ -46,7 +54,7 @@ class ViMode(basemode.BaseMode):
             self._update_line()
             return True
         return False
-        
+
     ### Methods below here are bindable emacs functions
 
     def init_editing_mode(self, e): # (M-C-j)
@@ -970,7 +978,7 @@ class ViExternalEditor:
         return tempfile.mktemp (prefix='readline-', suffix='.py')
 
     def file_open (self, filename, mode):
-        return file (filename, mode)
+        return file(filename, mode)
 
     def file_remove (self, filename):
         os.remove (filename)

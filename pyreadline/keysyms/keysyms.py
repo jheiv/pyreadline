@@ -7,14 +7,11 @@
 #  the file COPYING, distributed as part of this software.
 #*****************************************************************************
 from __future__ import print_function, unicode_literals, absolute_import
+
 from . import winconstants as c32
-from   pyreadline.logger import log
-from ctypes import windll
-import ctypes
+
+
 # table for translating virtual keys to X windows key symbols
-
-from .common import KeyPress
-
 code2sym_map = {c32.VK_CANCEL:     'cancel',
                 c32.VK_BACK:       'backspace',
                 c32.VK_TAB:        'tab',
@@ -96,39 +93,7 @@ code2sym_map = {c32.VK_CANCEL:     'cancel',
                 c32.VK_DECIMAL:    'vk_decimal'
                }
 
-VkKeyScan = windll.user32.VkKeyScanA
 
-def char_to_keyinfo(char, control=False, meta=False, shift=False):
-    k=KeyPress()
-    vk = VkKeyScan(ord(char))
-    if vk & 0xffff == 0xffff:
-        print('VkKeyScan("%s") = %x' % (char, vk))
-        raise ValueError('bad key')
-    if vk & 0x100:
-        k.shift = True
-    if vk & 0x200:
-        k.control = True
-    if vk & 0x400:
-        k.meta = True
-    k.char=chr(vk & 0xff)
-    return k
-
-def make_KeyPress(char, state, keycode):
-    control = (state & (4+8)) != 0
-    meta = (state & (1+2)) != 0
-    shift = (state & 0x10) != 0
-    if control and not meta:#Matches ctrl- chords should pass keycode as char
-        char = chr(keycode)
-    elif control and meta:  #Matches alt gr and should just pass on char
-        control = False
-        meta = False
-    try:
-        keyname=code2sym_map[keycode]
-    except KeyError:
-        keyname = ""
-    out = KeyPress(char, shift, control, meta, keyname)
-    return out
 
 if __name__ == "__main__":
-    import startup
-    
+    from pyreadline.configuration import startup

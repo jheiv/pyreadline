@@ -10,15 +10,14 @@ from __future__ import print_function, unicode_literals, absolute_import
 
 import sys, unittest
 sys.path.insert(0, '../..')
-from pyreadline.modes.emacs import *
-from pyreadline import keysyms
-from pyreadline.lineeditor import lineobj
 
-from pyreadline.test.common import *
-from pyreadline.logger import log
+from pyreadline.modes.emacs import EmacsMode
+from pyreadline.test.common import MockReadline, MockConsole, Tester, keytext_to_keyinfo_and_event
 import pyreadline.logger as logger
+
 logger.sock_silent=True
 logger.show_event=["debug"]
+log = logger.log
 
 #----------------------------------------------------------------------
 
@@ -35,7 +34,7 @@ class EmacsModeTest (EmacsMode):
         self.tabstop = 4
         self.mark_directories=False
         self.show_all_if_ambiguous=False
-        
+
     def get_mock_console (self):
         return self.mock_console
     console = property (get_mock_console)
@@ -57,8 +56,10 @@ class EmacsModeTest (EmacsMode):
         else:
             lst_key = [keytext]
         for key in lst_key:
-            keyinfo, event = keytext_to_keyinfo_and_event (key)
-            dispatch_func = self.key_dispatch.get(keyinfo.tuple(),self.self_insert)
+            keyinfo, event = keytext_to_keyinfo_and_event(key)
+            print(keyinfo)
+            print(keyinfo.to_tuple())
+            dispatch_func = self.key_dispatch.get(keyinfo.to_tuple(), self.self_insert)
             self.tested_commands[dispatch_func.__name__]=dispatch_func
             log("keydisp: %s %s"%( key,dispatch_func.__name__))
             dispatch_func (event)
@@ -174,7 +175,7 @@ class TestsDelete (unittest.TestCase):
         r.input('Escape')
         self.assertEqual (r.line, '')
         self.assertEqual (r.line_cursor, 0)
-        
+
     def test_delete_word (self):
         r = EmacsModeTest ()
         self.assertEqual (r.line, '')
@@ -329,7 +330,7 @@ class TestsHistory (unittest.TestCase):
         r.input ('Up')
         self.assert_line(r,'ako',3)
 
-    def test_history_3 (self):
+    def test_history_4 (self):
         r = EmacsModeTest ()
         r.add_history ('aaaa')
         r.add_history ('aaba')
@@ -371,12 +372,12 @@ class TestsHistory (unittest.TestCase):
         r.input('Tab')
         self.assert_line(r, "exit", 4)
 
-        
-        
+
+
     def assert_line(self,r,line,cursor):
         self.assertEqual (r.line, line)
         self.assertEqual (r.line_cursor, cursor)
-        
+
 #----------------------------------------------------------------------
 # utility functions
 
@@ -384,12 +385,12 @@ class TestsHistory (unittest.TestCase):
 
 if __name__ == '__main__':
     Tester()
-    tested=list(EmacsModeTest.tested_commands.keys())    
+    tested=list(EmacsModeTest.tested_commands.keys())
     tested.sort()
 #    print(" Tested functions ".center(60,"-"))
 #    print( "\n".join(tested))
 #    print()
-    
+
     all_funcs=dict([(x.__name__,x) for x in list(EmacsModeTest().key_dispatch.values())])
     all_funcs=list(all_funcs.keys())
     not_tested=[x for x in all_funcs if x not in tested]

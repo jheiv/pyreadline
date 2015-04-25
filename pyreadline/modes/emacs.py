@@ -7,15 +7,10 @@
 #  the file COPYING, distributed as part of this software.
 #*****************************************************************************
 from __future__ import print_function, unicode_literals, absolute_import
-import os, sys, time
-import pyreadline.logger as logger
-from   pyreadline.logger import log
-from pyreadline.lineeditor.lineobj import Point
-import pyreadline.lineeditor.lineobj as lineobj
-import pyreadline.lineeditor.history as history
-from . import basemode
-from pyreadline.unicode_helper import ensure_unicode
 
+from   pyreadline.logger import log
+import pyreadline.lineeditor.lineobj as lineobj
+from . import basemode
 
 def format(keyinfo):
     if len(keyinfo[-1]) != 1:
@@ -24,8 +19,6 @@ def format(keyinfo):
         k = keyinfo + (ord(keyinfo[-1]),)
     return "(%s,%s,%s,%s,%x)"%k
 
-in_ironpython = "IronPython" in sys.version
-
 
 class IncrementalSearchPromptMode(object):
     def __init__(self, rlobj):
@@ -33,7 +26,7 @@ class IncrementalSearchPromptMode(object):
 
     def _process_incremental_search_keyevent(self, keyinfo):
         log("_process_incremental_search_keyevent")
-        keytuple = keyinfo.tuple()
+        keytuple = keyinfo.to_tuple()
         #dispatch_func = self.key_dispatch.get(keytuple, default)
         revtuples = []
         fwdtuples = []
@@ -42,8 +35,8 @@ class IncrementalSearchPromptMode(object):
                 revtuples.append(ktuple)
             elif func == self.forward_search_history:
                 fwdtuples.append(ktuple)
-        
-        
+
+
         log("IncrementalSearchPromptMode %s %s"%(keyinfo, keytuple))
         if keyinfo.keyname == 'backspace':
             self.subsearch_query = self.subsearch_query[:-1]
@@ -93,7 +86,7 @@ class IncrementalSearchPromptMode(object):
 
         if (self.previous_func != self.reverse_search_history and
             self.previous_func != self.forward_search_history):
-            self.subsearch_query = self.l_buffer[0:Point].get_line_text()
+            self.subsearch_query = self.l_buffer[0:lineobj.Point].get_line_text()
 
         if self.subsearch_fun == self.reverse_search_history:
             self.subsearch_prompt = "reverse-i-search%d`%s': "
@@ -113,7 +106,7 @@ class SearchPromptMode(object):
         pass
 
     def _process_non_incremental_search_keyevent(self, keyinfo):
-        keytuple = keyinfo.tuple()
+        keytuple = keyinfo.to_tuple()
         log("SearchPromptMode %s %s"%(keyinfo, keytuple))
         history = self._history
 
@@ -176,7 +169,7 @@ class DigitArgumentMode(object):
 
     def _process_digit_argument_keyevent(self, keyinfo):
         log("DigitArgumentMode.keyinfo %s"%keyinfo)
-        keytuple = keyinfo.tuple()
+        keytuple = keyinfo.to_tuple()
         log("DigitArgumentMode.keytuple %s %s"%(keyinfo, keytuple))
         if keyinfo.keyname in ['return']:
             self.prompt = self._digit_argument_oldprompt
@@ -200,7 +193,6 @@ class DigitArgumentMode(object):
         c = self.console
         line = self.l_buffer.get_line_text()
         self._digit_argument_oldprompt = self.prompt
-        queue = self.process_keyevent_queue
         queue = self.process_keyevent_queue
         queue.append(self._process_digit_argument_keyevent)
 
@@ -260,7 +252,7 @@ class EmacsMode(DigitArgumentMode, IncrementalSearchPromptMode,
         if self.next_meta:
             self.next_meta = False
             keyinfo.meta = True
-        keytuple = keyinfo.tuple()
+        keytuple = keyinfo.to_tuple()
 
         if self._insert_verbatim:
             self.insert_text(keyinfo)
@@ -630,7 +622,7 @@ class EmacsMode(DigitArgumentMode, IncrementalSearchPromptMode,
         self._bind_exit_key('Control-z')
 
         # I often accidentally hold the shift or control while typing space
-        self._bind_key('space',       self.self_insert)
+        self._bind_key('space',             self.self_insert)
         self._bind_key('Shift-space',       self.self_insert)
         self._bind_key('Control-space',     self.self_insert)
         self._bind_key('Return',            self.accept_line)
@@ -660,16 +652,14 @@ class EmacsMode(DigitArgumentMode, IncrementalSearchPromptMode,
         self._bind_key('Alt->',             self.end_of_history)
         self._bind_key('Control-r',         self.reverse_search_history)
         self._bind_key('Control-s',         self.forward_search_history)
-        self._bind_key('Control-Shift-r',         self.forward_search_history)
-        self._bind_key('Alt-p',
-                       self.non_incremental_reverse_search_history)
-        self._bind_key('Alt-n',
-                       self.non_incremental_forward_search_history)
+        self._bind_key('Control-Shift-r',   self.forward_search_history)
+        self._bind_key('Alt-p',             self.non_incremental_reverse_search_history)
+        self._bind_key('Alt-n',             self.non_incremental_forward_search_history)
         self._bind_key('Control-z',         self.undo)
         self._bind_key('Control-_',         self.undo)
         self._bind_key('Escape',            self.kill_whole_line)
         self._bind_key('Meta-d',            self.kill_word)
-        self._bind_key('Control-Delete',       self.forward_delete_word)
+        self._bind_key('Control-Delete',    self.forward_delete_word)
         self._bind_key('Control-w',         self.unix_word_rubout)
         #self._bind_key('Control-Shift-v',   self.quoted_insert)
         self._bind_key('Control-v',         self.paste)
@@ -682,18 +672,12 @@ class EmacsMode(DigitArgumentMode, IncrementalSearchPromptMode,
         self._bind_key('Control-Shift-v',   self.paste_mulitline_code)
         self._bind_key("Control-Right",     self.forward_word_end)
         self._bind_key("Control-Left",      self.backward_word)
-        self._bind_key("Shift-Right",
-                       self.forward_char_extend_selection)
-        self._bind_key("Shift-Left",
-                       self.backward_char_extend_selection)
-        self._bind_key("Shift-Control-Right",
-                       self.forward_word_end_extend_selection)
-        self._bind_key("Shift-Control-Left",
-                       self.backward_word_extend_selection)
-        self._bind_key("Shift-Home",
-                       self.beginning_of_line_extend_selection)
-        self._bind_key("Shift-End",
-                       self.end_of_line_extend_selection)
+        self._bind_key("Shift-Right",       self.forward_char_extend_selection)
+        self._bind_key("Shift-Left",        self.backward_char_extend_selection)
+        self._bind_key("Shift-Control-Right", self.forward_word_end_extend_selection)
+        self._bind_key("Shift-Control-Left",  self.backward_word_extend_selection)
+        self._bind_key("Shift-Home",        self.beginning_of_line_extend_selection)
+        self._bind_key("Shift-End",         self.end_of_line_extend_selection)
         self._bind_key("numpad0",           self.self_insert)
         self._bind_key("numpad1",           self.self_insert)
         self._bind_key("numpad2",           self.self_insert)

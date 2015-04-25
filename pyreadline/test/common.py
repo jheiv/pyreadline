@@ -6,10 +6,9 @@
 #  the file COPYING, distributed as part of this software.
 #*****************************************************************************
 from __future__ import print_function, unicode_literals, absolute_import
-from pyreadline.modes.emacs import *
-from pyreadline import keysyms
-from pyreadline.lineeditor import lineobj
-from pyreadline.keysyms.common import make_KeyPress_from_keydescr
+
+from pyreadline.keysyms.common import KeyPress
+from pyreadline.lineeditor import lineobj, history
 
 import unittest
 class MockReadline:
@@ -65,11 +64,11 @@ class Event:
             self.char = char
 
 def keytext_to_keyinfo_and_event (keytext):
-    keyinfo = keysyms.common.make_KeyPress_from_keydescr (keytext)
+    keyinfo = KeyPress.from_keydescr(keytext)
     if len(keytext) == 3 and keytext[0] == '"' and keytext[2] == '"':
         event = Event (keytext[1])
     else:
-        event = Event (keyinfo.tuple() [3])
+        event = Event (keyinfo.to_tuple() [3])
     return keyinfo, event
 
 

@@ -1,7 +1,10 @@
 from __future__ import print_function, unicode_literals, absolute_import
-import sys
+
+import pyreadline.site as site
+in_ironpython = site.in_ironpython()
+
+
 success = True
-in_ironpython = "IronPython" in sys.version
 if in_ironpython:
     try:
         from .ironpython_clipboard import GetClipboardText, SetClipboardText
@@ -13,11 +16,11 @@ else:
         from .win32_clipboard import GetClipboardText, SetClipboardText
     except ImportError:
         from .no_clipboard import GetClipboardText, SetClipboardText
-    
+
 
 def send_data(lists):
     SetClipboardText(make_tab(lists))
-    
+
 
 def set_clipboard_text(toclipboard):
     SetClipboardText(str(toclipboard))
@@ -31,8 +34,8 @@ def make_tab(lists):
             ut.append("\t".join(["%s"%x for x in rad]))
         else:
             ut.append("%s"%rad)
-    return "\n".join(ut)            
-    
+    return "\n".join(ut)
+
 def make_list_of_list(txt):
     def make_num(x):
         try:
@@ -45,7 +48,7 @@ def make_list_of_list(txt):
                     return complex(x)
                 except ValueError:
                     return x
-        return x                
+        return x
     ut = []
     flag = False
     for rad in [x for x in txt.split("\r\n") if x != ""]:
@@ -57,8 +60,8 @@ def make_list_of_list(txt):
 
 
 def get_clipboard_text_and_convert(paste_list=False):
-    """Get txt from clipboard. if paste_list==True the convert tab separated 
-    data to list of lists. Enclose list of list in array() if all elements are 
+    """Get txt from clipboard. if paste_list==True the convert tab separated
+    data to list of lists. Enclose list of list in array() if all elements are
     numeric"""
     txt = GetClipboardText()
     if txt:

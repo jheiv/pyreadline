@@ -8,7 +8,7 @@
 #*****************************************************************************
 from __future__ import print_function, unicode_literals, absolute_import
 import System
-from .common import validkey, KeyPress, make_KeyPress_from_keydescr
+from .common import validkey, KeyPress
 
 c32 = System.ConsoleKey
 Shift = System.ConsoleModifiers.Shift
@@ -196,7 +196,7 @@ def make_KeyPress(char, state, keycode):
     keyname = code2sym_map.get(keycode, "").lower()
     if control and meta: #equivalent to altgr so clear flags
         control = False
-        meta = False    
+        meta = False
     elif control:
         char = str(keycode)
     return KeyPress(char, shift, control, meta, keyname)

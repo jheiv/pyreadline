@@ -7,17 +7,17 @@
 #  the file COPYING, distributed as part of this software.
 #*****************************************************************************
 from __future__ import print_function, unicode_literals, absolute_import
-import os, re, math, glob, sys, time
+import os, re, math, glob, sys, traceback
 from pyreadline.py3k_compat import callable
-import pyreadline.logger as logger
 from   pyreadline.logger import log
-from   pyreadline.keysyms.common import make_KeyPress_from_keydescr
+from   pyreadline.keysyms.common import KeyPress
 import pyreadline.lineeditor.lineobj as lineobj
 import pyreadline.lineeditor.history as history
 import pyreadline.clipboard as clipboard
-from pyreadline.error import ReadlineError,GetSetError
+from pyreadline.error import ReadlineError
 from pyreadline.unicode_helper import ensure_str, ensure_unicode
-in_ironpython = "IronPython" in sys.version
+import pyreadline.site as site
+in_ironpython = site.in_ironpython()
 
 class BaseMode(object):
     mode = "base"
@@ -42,10 +42,10 @@ class BaseMode(object):
         self.pre_input_hook = None
         self.first_prompt = True
         self.cursor_size=25
-        
+
         self.prompt = ">>> "
-        
-        #Paste settings    
+
+        #Paste settings
         #assumes data on clipboard is path if shorter than 300 characters and doesn't contain \t or \n
         #and replace \ with / for easier use in ipython
         self.enable_ipython_paste_for_paths=True
@@ -68,7 +68,7 @@ class BaseMode(object):
         def s(self,q):
             setattr(self.rlobj,x,q)
         return g,s
-        
+
     def _g(x):
         def g(self):
             return getattr(self.rlobj,x)
@@ -81,7 +81,7 @@ class BaseMode(object):
             val=1
         return val
     argument_reset=property(_argreset)
-        
+
 #used in readline
     ctrl_c_tap_time_interval=property(*_gs("ctrl_c_tap_time_interval"))
     allow_ctrl_c=property(*_gs("allow_ctrl_c"))
@@ -132,7 +132,7 @@ class BaseMode(object):
 
 
     def finalize(self):
-        """Every bindable command should call this function for cleanup. 
+        """Every bindable command should call this function for cleanup.
         Except those that want to set argument to a non-zero value.
         """
         self.argument = 0
@@ -140,7 +140,7 @@ class BaseMode(object):
 
     def add_history(self, text):
         self._history.add_history(lineobj.ReadLineTextBuffer(text))
-            
+
 
     #Create key bindings:
     def rl_settings_to_string(self):
@@ -155,20 +155,20 @@ class BaseMode(object):
         for key in bindings:
             out.append(tablepat%(key))
         return out
-    
+
 
     def _bind_key(self, key, func):
         """setup the mapping from key to call the function."""
         if not callable(func):
             print("Trying to bind non method to keystroke:%s,%s"%(key,func))
             raise ReadlineError("Trying to bind non method to keystroke:%s,%s,%s,%s"%(key,func,type(func),type(self._bind_key)))
-        keyinfo = make_KeyPress_from_keydescr(key.lower()).tuple()
+        keyinfo = KeyPress.from_keydescr(key.lower()).to_tuple()
         log(">>>%s -> %s<<<"%(keyinfo,func.__name__))
         self.key_dispatch[keyinfo] = func
 
     def _bind_exit_key(self, key):
         """setup the mapping from key to call the function."""
-        keyinfo = make_KeyPress_from_keydescr(key.lower()).tuple()
+        keyinfo = KeyPress.from_keydescr(key.lower()).to_tuple()
         self.exit_dispatch[keyinfo] = None
 
     def init_editing_mode(self, e): # (C-e)
@@ -176,8 +176,8 @@ class BaseMode(object):
         mode."""
 
         raise NotImplementedError
-#completion commands    
-    
+#completion commands
+
     def _get_completions(self):
         """Return a list of possible completions for the string ending at the point.
         Also set begidx and endidx in the process."""
@@ -289,7 +289,7 @@ class BaseMode(object):
             self.l_buffer[b:e] = rep
             b += len(rep)
             e = b
-        self.line_cursor = b    
+        self.line_cursor = b
         self.finalize()
 
     def menu_complete(self, e): # ()
@@ -357,17 +357,17 @@ class BaseMode(object):
         self.finalize()
 
 ### Movement with extend selection
-    def beginning_of_line_extend_selection(self, e): # 
+    def beginning_of_line_extend_selection(self, e): #
         """Move to the start of the current line. """
         self.l_buffer.beginning_of_line_extend_selection()
         self.finalize()
 
-    def end_of_line_extend_selection(self, e): # 
+    def end_of_line_extend_selection(self, e): #
         """Move to the end of the line. """
         self.l_buffer.end_of_line_extend_selection()
         self.finalize()
 
-    def forward_char_extend_selection(self, e): # 
+    def forward_char_extend_selection(self, e): #
         """Move forward a character. """
         self.l_buffer.forward_char_extend_selection(self.argument_reset)
         self.finalize()
@@ -377,25 +377,25 @@ class BaseMode(object):
         self.l_buffer.backward_char_extend_selection(self.argument_reset)
         self.finalize()
 
-    def forward_word_extend_selection(self, e): # 
+    def forward_word_extend_selection(self, e): #
         """Move forward to the end of the next word. Words are composed of
         letters and digits."""
         self.l_buffer.forward_word_extend_selection(self.argument_reset)
         self.finalize()
 
-    def backward_word_extend_selection(self, e): # 
+    def backward_word_extend_selection(self, e): #
         """Move back to the start of the current or previous word. Words are
         composed of letters and digits."""
         self.l_buffer.backward_word_extend_selection(self.argument_reset)
         self.finalize()
 
-    def forward_word_end_extend_selection(self, e): # 
+    def forward_word_end_extend_selection(self, e): #
         """Move forward to the end of the next word. Words are composed of
         letters and digits."""
         self.l_buffer.forward_word_end_extend_selection(self.argument_reset)
         self.finalize()
 
-    def backward_word_end_extend_selection(self, e): # 
+    def backward_word_end_extend_selection(self, e): #
         """Move forward to the end of the next word. Words are composed of
         letters and digits."""
         self.l_buffer.forward_word_end_extend_selection(self.argument_reset)
@@ -508,10 +508,10 @@ class BaseMode(object):
                 else:
                     return False
         self.finalize()
-        
+
     def ipython_paste(self,e):
-        """Paste windows clipboard. If enable_ipython_paste_list_of_lists is 
-        True then try to convert tabseparated data to repr of list of lists or 
+        """Paste windows clipboard. If enable_ipython_paste_list_of_lists is
+        True then try to convert tabseparated data to repr of list of lists or
         repr of array.
         If enable_ipython_paste_for_paths==True then change \\ to / and spaces to \space"""
         if self.enable_win32_clipboard:

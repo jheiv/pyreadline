@@ -10,11 +10,7 @@ from __future__ import print_function, unicode_literals, absolute_import
 import sys, unittest
 sys.path.insert(0, '../..')
 from pyreadline.modes.vi import *
-from pyreadline import keysyms
-from pyreadline.lineeditor import lineobj
-from pyreadline.logger import log
-import pyreadline.logger as logger
-from pyreadline.test.common import *
+from pyreadline.test.common import MockReadline, MockConsole, Tester, keytext_to_keyinfo_and_event
 
 from pyreadline.py3k_compat import StringIO
 #----------------------------------------------------------------------
@@ -53,7 +49,7 @@ class ViModeTest (ViMode):
             lst_key = [keytext]
         for key in lst_key:
             keyinfo, event = keytext_to_keyinfo_and_event (key)
-            dispatch_func = self.key_dispatch.get(keyinfo.tuple(), self.vi_key)
+            dispatch_func = self.key_dispatch.get(keyinfo.to_tuple(), self.vi_key)
             self.tested_commands[dispatch_func.__name__] = dispatch_func
             dispatch_func (event)
 
@@ -2142,17 +2138,17 @@ class Tests (unittest.TestCase):
 if __name__  == '__main__':
     Tester()
 
-    tested=list(ViModeTest.tested_commands.keys())    
+    tested=list(ViModeTest.tested_commands.keys())
     tested.sort()
     print(" Tested functions ".center(60,"-"))
     print("\n".join(tested))
     print()
-    
+
     all_funcs=dict([(x.__name__,x) for x in list(ViModeTest().key_dispatch.values())])
     all_funcs=list(all_funcs.keys())
     not_tested=[x for x in all_funcs if x not in tested]
     not_tested.sort()
     print(" Not tested functions ".center(60,"-"))
     print("\n".join(not_tested))
-    
-    
+
+
